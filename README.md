@@ -74,7 +74,42 @@ Open http://localhost:3000
 | `pnpm dev`       | Run all packages in parallel |
 | `pnpm dev:web`   | Next.js only               |
 | `pnpm dev:api`   | API only                   |
+| `pnpm build:api` | Generate Prisma + typecheck API |
+| `pnpm build:web` | Build Next.js              |
+| `pnpm start:api` | Start API (production)     |
+| `pnpm start:web` | Start Web (production)     |
 | `pnpm db:generate` | Prisma client            |
 | `pnpm db:push`   | Push schema to DB          |
 | `pnpm db:seed`   | Seed demo data             |
 | `pnpm db:studio` | Prisma Studio              |
+
+## Railway deploy
+
+Monorepo needs **3 services**: Postgres + `@escalation/api` + `@escalation/web`.
+
+### 1. Postgres
+Add Railway **PostgreSQL**. Copy / reference `DATABASE_URL`.
+
+### 2. API service (`@escalation/api`)
+- Root Directory: `/` (repo root)
+- Config-as-code path: `/apps/api/railway.toml`
+- Variables:
+  - `DATABASE_URL` = `${{Postgres.DATABASE_URL}}`
+  - `JWT_SECRET` = strong random string
+  - `CORS_ORIGIN` = `https://YOUR-WEB.up.railway.app`
+  - `APP_URL` = `https://YOUR-WEB.up.railway.app`
+- Settings → Networking → **Generate Domain**
+- Health: `/health`
+
+### 3. Web service (`@escalation/web`)
+- Root Directory: `/`
+- Config-as-code path: `/apps/web/railway.toml`
+- Variables:
+  - `NEXT_PUBLIC_API_URL` = `https://YOUR-API.up.railway.app` (set **before** build)
+- Generate Domain, then update API `CORS_ORIGIN` / `APP_URL` and redeploy API
+
+### 4. Seed (optional, once)
+In API service console / one-off:
+```bash
+pnpm db:seed
+```

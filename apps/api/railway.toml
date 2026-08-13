@@ -1,0 +1,14 @@
+# Config path in Railway: /apps/api/railway.toml
+# Keep service Root Directory = / (repo root) for pnpm workspace installs.
+
+[build]
+builder = "RAILPACK"
+buildCommand = "pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @escalation/api build"
+
+[deploy]
+startCommand = "pnpm --filter @escalation/api start"
+preDeployCommand = ["pnpm db:push"]
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

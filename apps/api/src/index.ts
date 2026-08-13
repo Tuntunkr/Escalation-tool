@@ -48,9 +48,10 @@ app.route("/meta", metaRoutes);
 app.route("/notifications", notificationRoutes);
 app.route("/admin", adminRoutes);
 
-const port = Number(process.env.API_PORT || 4000);
+const port = Number(process.env.PORT || process.env.API_PORT || 4000);
+const hostname = process.env.HOST || "0.0.0.0";
 
-serve({ fetch: app.fetch, port }, () => {
-  console.log(`API listening on http://localhost:${port}`);
+serve({ fetch: app.fetch, port, hostname }, () => {
+  console.log(`API listening on http://${hostname}:${port}`);
   console.log(`Uploads folder: ${UPLOAD_ROOT}`);
 });
