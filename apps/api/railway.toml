@@ -2,7 +2,7 @@
 # Keep service Root Directory = / (repo root) for pnpm workspace installs.
 
 [build]
-builder = "RAILPACK"
+builder = "NIXPACKS"
 buildCommand = "pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @escalation/api build"
 
 [deploy]

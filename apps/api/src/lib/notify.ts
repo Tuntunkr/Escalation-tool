@@ -1,6 +1,7 @@
 import { prisma } from "@escalation/db";
 
-const APP_URL = process.env.APP_URL || "http://localhost:3000";
+const APP_URL =
+  process.env.APP_URL || "https://escalation-tool-web.vercel.app";
 
 export async function notifyUser(opts: {
   userId: string;
