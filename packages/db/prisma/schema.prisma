@@ -1,0 +1,196 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SELLER
+  KAM
+  OPS
+  ADMIN
+}
+
+enum EscalationStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_ON_SELLER
+  RESOLVED
+  CLOSED
+  REJECTED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  avatarUrl    String?
+  role         Role
+  active       Boolean  @default(true)
+  sellerId     String?
+  seller       Seller?  @relation("SellerUsers", fields: [sellerId], references: [id])
+  kamId        String?
+  kam          Kam?     @relation("KamUsers", fields: [kamId], references: [id])
+  opsId        String?
+  ops          OpsUser? @relation("OpsUsers", fields: [opsId], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  comments     Comment[]
+  events       EscalationEvent[]
+  assignedPoc  Poc?
+  notifications Notification[]
+
+  @@index([role])
+  @@index([sellerId])
+  @@index([kamId])
+  @@index([opsId])
+}
+
+/// Key Account Manager directory
+model Kam {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  sellers   Seller[]
+  users     User[]   @relation("KamUsers")
+}
+
+/// Seller / merchant directory (data isolated per seller)
+model Seller {
+  id          String       @id @default(cuid())
+  code        String       @unique
+  name        String
+  email       String       @unique
+  phone       String?
+  company     String?
+  active      Boolean      @default(true)
+  kamId       String?
+  kam         Kam?         @relation(fields: [kamId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  users       User[]       @relation("SellerUsers")
+  escalations Escalation[]
+
+  @@index([kamId])
+  @@index([active])
+}
+
+/// Operations team member directory
+model OpsUser {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]   @relation("OpsUsers")
+  pocs      Poc[]
+}
+
+model IssueCategory {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  active      Boolean      @default(true)
+  sortOrder   Int          @default(0)
+  escalations Escalation[]
+}
+
+/// Point of contact shown on escalation form (maps to ops people)
+model Poc {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  active      Boolean      @default(true)
+  userId      String?      @unique
+  user        User?        @relation(fields: [userId], references: [id])
+  opsId       String?
+  ops         OpsUser?     @relation(fields: [opsId], references: [id])
+  escalations Escalation[]
+}
+
+model Escalation {
+  id         String           @id @default(cuid())
+  awb        String
+  remarks    String?
+  status     EscalationStatus @default(OPEN)
+  sellerId   String
+  seller     Seller           @relation(fields: [sellerId], references: [id])
+  categoryId String
+  category   IssueCategory    @relation(fields: [categoryId], references: [id])
+  pocId      String
+  poc        Poc              @relation(fields: [pocId], references: [id])
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+  resolvedAt DateTime?
+
+  files    EscalationFile[]
+  comments Comment[]
+  events   EscalationEvent[]
+
+  @@index([sellerId])
+  @@index([status])
+  @@index([awb])
+  @@index([pocId])
+  @@index([createdAt])
+}
+
+model EscalationFile {
+  id           String     @id @default(cuid())
+  escalationId String
+  escalation   Escalation @relation(fields: [escalationId], references: [id], onDelete: Cascade)
+  fileName     String
+  mimeType     String
+  sizeBytes    Int
+  storagePath  String
+  createdAt    DateTime   @default(now())
+}
+
+model Comment {
+  id           String     @id @default(cuid())
+  escalationId String
+  escalation   Escalation @relation(fields: [escalationId], references: [id], onDelete: Cascade)
+  authorId     String
+  author       User       @relation(fields: [authorId], references: [id])
+  body         String
+  internal     Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  @@index([escalationId])
+}
+
+model EscalationEvent {
+  id           String     @id @default(cuid())
+  escalationId String
+  escalation   Escalation @relation(fields: [escalationId], references: [id], onDelete: Cascade)
+  actorId      String?
+  actor        User?      @relation(fields: [actorId], references: [id])
+  type         String
+  message      String
+  meta         String?
+  createdAt    DateTime   @default(now())
+
+  @@index([escalationId])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  href      String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
