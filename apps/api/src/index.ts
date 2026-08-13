@@ -16,8 +16,9 @@ import { UPLOAD_ROOT } from "./lib/paths.js";
 import type { AppEnv } from "./lib/middleware.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+// Never override Railway/hosted env vars with local .env files.
 config({ path: resolve(__dirname, "../../../packages/db/.env") });
-config({ path: resolve(__dirname, "../.env"), override: true });
+config({ path: resolve(__dirname, "../.env") });
 
 const app = new Hono<AppEnv>();
 
@@ -46,7 +47,41 @@ app.use(
   })
 );
 
-app.get("/health", (c) => c.json({ ok: true, service: "escalation-api" }));
+function databaseUrlStatus() {
+  const raw = process.env.DATABASE_URL?.trim() || "";
+  if (!raw) return { configured: false, parseable: false, reason: "empty" };
+  if (raw.includes("....") || raw.includes("YOUR_PASSWORD")) {
+    return {
+      configured: true,
+      parseable: false,
+      reason: "placeholder_url",
+      length: raw.length,
+    };
+  }
+  try {
+    const u = new URL(raw);
+    const portOk = u.port === "" || /^\d+$/.test(u.port);
+    return {
+      configured: true,
+      parseable: portOk && Boolean(u.hostname),
+      reason: portOk ? "ok" : "invalid_port",
+      host: u.hostname,
+      port: u.port || "default",
+      length: raw.length,
+    };
+  } catch {
+    return {
+      configured: true,
+      parseable: false,
+      reason: "invalid_url",
+      length: raw.length,
+    };
+  }
+}
+
+app.get("/health", (c) =>
+  c.json({ ok: true, service: "escalation-api", database: databaseUrlStatus() })
+);
 
 app.route("/auth", authRoutes);
 app.route("/profile", profileRoutes);
