@@ -6,8 +6,8 @@ builder = "RAILPACK"
 buildCommand = "pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @escalation/api build"
 
 [deploy]
-startCommand = "pnpm start:api:prod"
+startCommand = "pnpm --filter @escalation/api start"
 healthcheckPath = "/health"
-healthcheckTimeout = 100
+healthcheckTimeout = 30
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 5
