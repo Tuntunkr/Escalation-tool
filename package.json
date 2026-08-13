@@ -10,6 +10,7 @@
     "build:api": "pnpm db:generate && pnpm --filter @escalation/api build",
     "build:web": "pnpm --filter @escalation/web build",
     "start:api": "pnpm --filter @escalation/api start",
+    "start:api:prod": "pnpm db:push && pnpm --filter @escalation/api start",
     "start:web": "pnpm --filter @escalation/web start",
     "db:generate": "pnpm --filter @escalation/db generate",
     "db:push": "pnpm --filter @escalation/db push",

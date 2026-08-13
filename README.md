@@ -77,6 +77,7 @@ Open http://localhost:3000
 | `pnpm build:api` | Generate Prisma + typecheck API |
 | `pnpm build:web` | Build Next.js              |
 | `pnpm start:api` | Start API (production)     |
+| `pnpm start:api:prod` | DB push + start API (Railway) |
 | `pnpm start:web` | Start Web (production)     |
 | `pnpm db:generate` | Prisma client            |
 | `pnpm db:push`   | Push schema to DB          |
