@@ -1,21 +1,27 @@
 import { spawnSync, spawn } from "node:child_process";
+import { applyResolvedDatabaseUrl } from "./resolve-database-url.mjs";
 
-const databaseUrl = process.env.DATABASE_URL?.trim();
+const resolved = applyResolvedDatabaseUrl(process.env);
+console.log(
+  `Database URL source=${resolved.source} length=${resolved.url?.length || 0}`
+);
 
-if (databaseUrl) {
-  console.log("DATABASE_URL present — running prisma db push...");
+if (!resolved.url || resolved.source === "DATABASE_URL_invalid" || resolved.source === "missing") {
+  console.error(
+    "WARNING: No usable DATABASE_URL. On Railway API variables, either:\n" +
+      "  1) Copy real Postgres DATABASE_URL (not .... placeholders), or\n" +
+      "  2) Add Variable References: PGHOST, PGPORT, PGPASSWORD, PGUSER, PGDATABASE"
+  );
+} else {
+  console.log("Running prisma db push...");
   const result = spawnSync("pnpm", ["db:push"], {
     stdio: "inherit",
     env: process.env,
     shell: true,
   });
   if (result.status !== 0) {
-    console.error("db:push failed — starting API anyway (fix DATABASE_URL if login 500s)");
+    console.error("db:push failed — starting API anyway");
   }
-} else {
-  console.error(
-    "WARNING: DATABASE_URL is empty. Set it via Railway Variable Reference to your Postgres service, then redeploy."
-  );
 }
 
 const child = spawn("pnpm", ["--filter", "@escalation/api", "start"], {
