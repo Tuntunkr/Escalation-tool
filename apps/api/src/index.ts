@@ -42,7 +42,13 @@ app.use(
     origin: (origin) => {
       if (!origin) return allowedOrigins[0];
       const normalized = origin.replace(/\/$/, "");
-      return allowedOrigins.includes(normalized) ? normalized : null;
+      if (
+        allowedOrigins.includes(normalized) ||
+        normalized.endsWith(".vercel.app")
+      ) {
+        return normalized;
+      }
+      return allowedOrigins[0];
     },
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
