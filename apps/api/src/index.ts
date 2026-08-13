@@ -21,6 +21,12 @@ config({ path: resolve(__dirname, "../.env"), override: true });
 
 const app = new Hono<AppEnv>();
 
+app.onError((err, c) => {
+  console.error("API error:", err);
+  const message = err instanceof Error ? err.message : "Internal Server Error";
+  return c.json({ error: message }, 500);
+});
+
 app.use("*", logger());
 app.use(
   "*",
