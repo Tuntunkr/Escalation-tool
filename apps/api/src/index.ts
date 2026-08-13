@@ -54,6 +54,5 @@ const hostname = process.env.HOST || "0.0.0.0";
 
 serve({ fetch: app.fetch, port, hostname }, () => {
   console.log(`API listening on http://${hostname}:${port}`);
-  console.log(`CORS origins: ${allowedOrigins.join(", ")}`);
   console.log(`Uploads folder: ${UPLOAD_ROOT}`);
 });
