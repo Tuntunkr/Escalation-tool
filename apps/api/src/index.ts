@@ -21,11 +21,29 @@ config({ path: resolve(__dirname, "../.env"), override: true });
 
 const app = new Hono<AppEnv>();
 
+function parseCorsOrigins(raw?: string): string[] {
+  const defaults = [
+    "http://localhost:3000",
+    "https://escalation-tool-web.vercel.app",
+  ];
+  const fromEnv = (raw || "")
+    .split(",")
+    .map((value) => value.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+  return [...new Set([...defaults, ...fromEnv])];
+}
+
+const allowedOrigins = parseCorsOrigins(process.env.CORS_ORIGIN);
+
 app.use("*", logger());
 app.use(
   "*",
   cors({
-    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    origin: (origin) => {
+      if (!origin) return allowedOrigins[0];
+      const normalized = origin.replace(/\/$/, "");
+      return allowedOrigins.includes(normalized) ? normalized : null;
+    },
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   })
@@ -53,5 +71,6 @@ const hostname = process.env.HOST || "0.0.0.0";
 
 serve({ fetch: app.fetch, port, hostname }, () => {
   console.log(`API listening on http://${hostname}:${port}`);
+  console.log(`CORS origins: ${allowedOrigins.join(", ")}`);
   console.log(`Uploads folder: ${UPLOAD_ROOT}`);
 });
