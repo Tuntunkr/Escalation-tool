@@ -6,8 +6,8 @@ import { api, setSession, type SessionUser } from "@/lib/api";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("seller1@escalation.local");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -67,13 +67,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="demo-box">
-          Demo: seller1@ / seller2@ / kam@ / ops@ / admin@escalation.local
-          <br />
-          Password: <strong>password123</strong>
-          <br />
+        <p className="lede" style={{ marginTop: 16, marginBottom: 0 }}>
           New seller? <a href="/signup">Create account</a>
-        </div>
+        </p>
       </div>
     </main>
   );
