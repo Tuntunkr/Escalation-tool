@@ -21,35 +21,12 @@ config({ path: resolve(__dirname, "../.env"), override: true });
 
 const app = new Hono<AppEnv>();
 
-function parseCorsOrigins(raw?: string): string[] {
-  const defaults = [
-    "http://localhost:3000",
-    "https://escalation-tool-web.vercel.app",
-  ];
-  const fromEnv = (raw || "")
-    .split(",")
-    .map((value) => value.trim().replace(/\/$/, ""))
-    .filter(Boolean);
-  return [...new Set([...defaults, ...fromEnv])];
-}
-
-const allowedOrigins = parseCorsOrigins(process.env.CORS_ORIGIN);
-
 app.use("*", logger());
 app.use(
   "*",
   cors({
-    origin: (origin) => {
-      if (!origin) return allowedOrigins[0];
-      const normalized = origin.replace(/\/$/, "");
-      if (
-        allowedOrigins.includes(normalized) ||
-        normalized.endsWith(".vercel.app")
-      ) {
-        return normalized;
-      }
-      return allowedOrigins[0];
-    },
+    // Reflect browser Origin so Vercel <-> Railway login works even if env is stale.
+    origin: (origin) => origin || "*",
     allowHeaders: ["Content-Type", "Authorization"],
     allowMethods: ["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
   })
